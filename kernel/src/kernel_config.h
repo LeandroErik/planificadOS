@@ -7,8 +7,6 @@ typedef struct KernelConfig
 {
   char *IP;
   char *IP_CPU;
-  char *IP_MEMORIA;
-  char *PUERTO_MEMORIA;
   char *PUERTO_CPU_DISPATCH;
   char *PUERTO_CPU_INTERRUPT;
   char *PUERTO_KERNEL;

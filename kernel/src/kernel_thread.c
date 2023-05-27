@@ -68,12 +68,3 @@ void enviar_interrupcion(int socketInterrupt)
 
   eliminar_paquete(paquete);
 }
-
-void manejar_conexion_memoria(int socketMemoria)
-{
-  log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
-
-  enviar_mensaje_a_servidor("Kernel", socketMemoria);
-
-  log_info(logger, "Mensaje de inicio enviado a Memoria.");
-}

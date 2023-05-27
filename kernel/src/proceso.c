@@ -6,7 +6,6 @@ Logger *loggerPlanificacion;
 
 int idProcesoGlobal;
 Hilo hiloConsolas;
-Hilo hiloConexionMemoria;
 
 t_list *socketsConsola;
 
@@ -45,7 +44,6 @@ Semaforo despertarPlanificadorLargoPlazo;
 Semaforo semaforoCantidadProcesosEjecutando;
 Semaforo comunicacionMemoria;
 
-int socketMemoria;
 int socketDispatch;
 int socketInterrupt;
 int socketKernel;
@@ -183,13 +181,6 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         pid = pcb->pid;
         paquete = crear_paquete(FINALIZAR_PROCESO);
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
-        sem_wait(&comunicacionMemoria);
-        enviar_paquete_a_servidor(paquete, socketMemoria);
-        log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
-
-        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria);
-        log_info(logger, "%s [%d]", confirmacion, pid);
-        sem_post(&comunicacionMemoria);
 
         decrementar_cantidad_procesos_memoria();
 
@@ -872,9 +863,6 @@ void liberar_conexiones()
 {
     apagar_servidor(socketKernel);
     log_info(logger, "Servidor Kernel finalizado.");
-
-    liberar_conexion_con_servidor(socketMemoria);
-    log_info(logger, "Saliendo del Servidor Memoria.");
 
     liberar_conexion_con_servidor(socketDispatch);
     log_info(logger, "Saliendo del Servidor CPU-Dispatch.");

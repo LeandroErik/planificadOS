@@ -33,10 +33,4 @@ int manejar_envio_pcb(Logger *logger, int socketConsola);
  */
 void enviar_interrupcion(int socketInterrupt);
 
-/**
- * @brief Maneja una conexión con Memoria.
- *
- */
-void manejar_conexion_memoria(int socketMemoria);
-
 #endif

@@ -11,7 +11,6 @@ void interprete_de_seniales(int senial)
         pthread_cancel(hilo_planificador_corto_plazo);
         pthread_cancel(hilo_dispositivo_io);
         pthread_cancel(hiloConsolas);
-        pthread_cancel(hiloConexionMemoria);
     }
 }
 
@@ -43,8 +42,6 @@ int main(int argc, char *argv[])
 
     socketKernel = iniciar_servidor_kernel();
 
-    log_info(logger, "Conectando con Servidor Memoria.");
-    socketMemoria = conectar_con_memoria();
     log_info(logger, "Conectando con Servidor CPU-Dispatch.");
     socketDispatch = conectar_con_cpu_dispatch();
     log_info(logger, "Conectando con Servidor CPU-Interrupt.");
@@ -55,11 +52,8 @@ int main(int argc, char *argv[])
     iniciar_planificadores();
 
     pthread_create(&hiloConsolas, NULL, (void *)esperar_consola, (void *)socketKernel);
-    pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, socketMemoria);
 
     pthread_join(hiloConsolas, NULL);
-
-    pthread_join(hiloConexionMemoria, NULL);
 
     liberar_estructuras();
     liberar_semaforos();

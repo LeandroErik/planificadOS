@@ -97,20 +97,3 @@ int conectar_con_cpu_interrupt()
 
   return socketCPUDInterrupt;
 }
-
-int conectar_con_memoria()
-{
-  log_info(logger, "Conectando con Servidor Memoria en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
-
-  int socketCPUDInterrupt = crear_conexion_con_servidor(KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
-
-  if (socketCPUDInterrupt < 0)
-  {
-    log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible. %d", socketCPUDInterrupt);
-    return DESCONEXION;
-  }
-
-  log_info(logger, "Conexión con Memoria establecida.");
-
-  return socketCPUDInterrupt;
-}

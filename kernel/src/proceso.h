@@ -50,7 +50,6 @@ extern Semaforo despertarPlanificadorLargoPlazo;
 extern Semaforo semaforoCantidadProcesosEjecutando;
 extern Semaforo comunicacionMemoria;
 
-extern int socketMemoria;
 extern int socketDispatch;
 extern int socketInterrupt;
 extern int socketKernel;

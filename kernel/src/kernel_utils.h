@@ -15,7 +15,6 @@ extern Logger *loggerPlanificacion;
 
 extern int idProcesoGlobal;
 extern Hilo hiloConsolas;
-extern Hilo hiloConexionMemoria;
 
 extern t_list *socketsConsola;
 

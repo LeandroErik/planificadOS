@@ -4,8 +4,6 @@ void rellenar_configuracion_kernel(Config *config)
 {
   KERNEL_CONFIG.IP = config_get_string_value(config, "IP");
   KERNEL_CONFIG.IP_CPU = config_get_string_value(config, "IP_CPU");
-  KERNEL_CONFIG.IP_MEMORIA = config_get_string_value(config, "IP_MEMORIA");
-  KERNEL_CONFIG.PUERTO_MEMORIA = config_get_string_value(config, "PUERTO_MEMORIA");
   KERNEL_CONFIG.PUERTO_CPU_DISPATCH = config_get_string_value(config, "PUERTO_CPU_DISPATCH");
   KERNEL_CONFIG.PUERTO_CPU_INTERRUPT = config_get_string_value(config, "PUERTO_CPU_INTERRUPT");
   KERNEL_CONFIG.PUERTO_KERNEL = config_get_string_value(config, "PUERTO_KERNEL");
