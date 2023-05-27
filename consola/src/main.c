@@ -4,7 +4,7 @@
 int main(int argc, char *argv[])
 {
   Config *config = config_create("consola.config");
-  Logger *logger = log_create("Consola.log", "Consola", true, LOG_LEVEL_INFO);
+  Logger *logger = log_create("consola.log", "Consola", true, LOG_LEVEL_INFO);
 
   if (argc < 3)
   {
