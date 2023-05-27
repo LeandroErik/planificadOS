@@ -17,7 +17,7 @@ void interprete_de_seniales(int senial)
 int main(int argc, char *argv[])
 {
     logger = iniciar_logger_kernel();
-    loggerPlanificacion = log_create("Kernel-Planificacion.log", "Kernel", 1, LOG_LEVEL_INFO);
+    loggerPlanificacion = log_create("kernel-planificacion.log", "kernel", 1, LOG_LEVEL_INFO);
     if (argc < 2)
     {
         log_error(logger, "Falta poner config.");

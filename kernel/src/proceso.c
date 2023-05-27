@@ -55,7 +55,7 @@ Hilo hilo_dispositivo_io;
 /*Contador de procesos en memoria*/
 int cantidadProcesosEnMemoria;
 
-/*Inicializadores*/
+// Inicializadores
 void inicializar_semaforos()
 {
     pthread_mutex_init(&mutexNumeroProceso, NULL);
@@ -112,7 +112,7 @@ void iniciar_planificadores()
     pthread_detach(hilo_dispositivo_io);
 }
 
-/*Funciones del proceso*/
+//----------------Funciones del proceso----------------
 
 void ejecutar(Pcb *proceso)
 {
@@ -192,7 +192,6 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_cliente(paquete, socketConsola);
 
         eliminar_paquete(paquete);
-        free(confirmacion);
 
         break;
 
@@ -252,6 +251,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 
     ejecutar(pcbEjecutar);
 }
+
 void *monitorizarSuspension(Pcb *proceso)
 {
 
@@ -262,68 +262,16 @@ void *monitorizarSuspension(Pcb *proceso)
 
     usleep(tiempoMaximoBloqueoEnMicrosegundos);
     int valor = 0;
-    sem_getvalue(&(proceso->confirmacionSuspencion), &valor);
 
-    if (valor == 1) // esto indica que aun sigue en la cola de bloqueados.
-    {
+    // Mando al proceso a SUSPENDIDO
+    log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
+    proceso->escenario->estado = SUSPENDIDO;
+    proceso->vieneDeSuspension = true;
 
-        Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
+    decrementar_cantidad_procesos_memoria();
 
-        agregar_a_paquete(paquete, &(proceso->pid), sizeof(int));
-        sem_wait(&(proceso->confirmacionSuspencion));
-        sem_wait(&comunicacionMemoria);
-
-        enviar_paquete_a_servidor(paquete, socketMemoria);
-        log_info(loggerPlanificacion, "Se envio el proceso %d a la memoria para suspender", pid);
-
-        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
-        log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender proceso %s.", confirmacion);
-        sem_post(&comunicacionMemoria);
-
-        log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
-        proceso->escenario->estado = SUSPENDIDO;
-        proceso->vieneDeSuspension = true;
-
-        decrementar_cantidad_procesos_memoria();
-
-        sem_post(&(proceso->confirmacionSuspencion));
-
-        free(confirmacion);
-        eliminar_paquete(paquete);
-    }
     return NULL;
 }
-
-bool procesoSigueBloqueado(int _pid)
-{
-    if (lectura_cola_mutex(colaBloqueados, &mutexColaBloqueados) > 0)
-    {
-        if (buscar_pcb_cola(_pid))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    return false;
-}
-bool buscar_pcb_cola(int _pid)
-{
-
-    for (int i = 0; i < queue_size(colaBloqueados); i++)
-    {
-        if (((Pcb *)queue_peek_at(colaBloqueados, i))->pid == _pid)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-/*Varios*/
 
 void enviar_pcb(Pcb *proceso, int socketDispatch)
 {
@@ -475,7 +423,7 @@ Pcb *sacar_proceso_mas_corto()
     return pcbSaliente;
 }
 
-/*Funciones para aniadir proceso a cola*/
+// Funciones para aniadir procesos a colas de estado
 
 void agregar_proceso_nuevo(Pcb *procesoNuevo)
 {
@@ -489,7 +437,7 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
     // Despierto al Planificador de Largo Plazo
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 void agregar_proceso_listo(Pcb *procesoListo)
 {
@@ -508,33 +456,12 @@ void agregar_proceso_listo(Pcb *procesoListo)
     }
     sem_post(&semaforoProcesoListo);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 
 int tabla_pagina_primer_nivel(int pid, int tamanio)
 {
-
-    Paquete *paquete = crear_paquete(PROCESO_NUEVO);
-
-    agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
-    agregar_a_paquete(paquete, &tamanio, sizeof(unsigned int));
-    sem_wait(&comunicacionMemoria);
-    enviar_paquete_a_servidor(paquete, socketMemoria);
-
-    log_info(logger, "Se envio el proceso %d a la memoria", pid);
-
-    char *mensajeDeMemoria;
-    int tablaPrimerNivel;
-
-    mensajeDeMemoria = obtener_mensaje_del_servidor(socketMemoria);
-    sem_post(&comunicacionMemoria);
-    tablaPrimerNivel = atoi(mensajeDeMemoria);
-    log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
-
-    eliminar_paquete(paquete);
-    free(mensajeDeMemoria);
-
-    return tablaPrimerNivel;
+    return 0;
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
@@ -553,13 +480,9 @@ void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
 
     pthread_mutex_unlock(&mutexColaEjecutando);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 
-int calcular_tiempo_rafaga_real_anterior(Pcb *proceso)
-{
-    return obtener_tiempo_actual() - proceso->tiempoInicioEjecucion;
-}
 void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 {
     procesoBloqueado->estimacionRafaga = obtener_tiempo_de_trabajo_actual(procesoBloqueado);
@@ -583,7 +506,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 
 void agregar_proceso_finalizado(Pcb *procesoFinalizado)
@@ -598,7 +521,7 @@ void agregar_proceso_finalizado(Pcb *procesoFinalizado)
     // Despierto al planificador de mediano plazo.
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 
 void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
@@ -614,10 +537,10 @@ void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
     // Despierto al Planificador de Largo Plazo
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    // imprimir_colas();
+    imprimir_colas();
 }
 
-/*Funciones para sacar procesos a cola.*/
+// Funciones para sacar procesos de colas de estado.
 
 Pcb *sacar_proceso_ejecutando()
 {
@@ -632,7 +555,7 @@ Pcb *sacar_proceso_ejecutando()
     // le aviso al planificador de corto plazo
     sem_post(&semaforoCantidadProcesosEjecutando);
 
-    // imprimir_colas();
+    imprimir_colas();
     return pcbSaliente;
 }
 
@@ -685,7 +608,7 @@ Pcb *extraer_proceso_suspendido_listo()
     return pcbSaliente;
 }
 
-/*Monitores*/
+// Monitores
 void incrementar_cantidad_procesos_memoria()
 {
     pthread_mutex_lock(&mutexcantidadProcesosMemoria);
@@ -718,11 +641,33 @@ int lectura_cola_mutex(t_queue *cola, pthread_mutex_t *semaforoMutex)
     return tamanio;
 }
 
-// Varios
+// Funciones SRT
+
+int calcular_tiempo_rafaga_real_anterior(Pcb *proceso)
+{
+    return obtener_tiempo_actual() - proceso->tiempoInicioEjecucion;
+}
+
+float obtener_tiempo_de_trabajo_actual(Pcb *proceso)
+{
+    float alfa = KERNEL_CONFIG.ALFA;
+    float estimacionAnterior = proceso->estimacionRafaga;
+    int rafagaAnterior = proceso->tiempoRafagaRealAnterior * 1000;
+
+    float resultado = alfa * rafagaAnterior + (1 - alfa) * estimacionAnterior;
+
+    return resultado;
+}
+
+bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
+{
+    return obtener_tiempo_de_trabajo_actual((Pcb *)procesoA) < obtener_tiempo_de_trabajo_actual((Pcb *)procesoB);
+}
+// Funciones de lectura e impresion en pantalla
 void imprimir_colas()
 {
     // Un forma bonita de impirmirlo.
-    // system("clear");
+    system("clear");
     char *strcolaNuevos = leer_cola(colaNuevos);
     char *strcolaListos = leer_lista(colaListos);
     char *strcolaEjecutando = leer_cola(colaEjecutando);
@@ -747,76 +692,6 @@ void imprimir_colas()
     free(strcolaSuspendidoListo);
     free(strcolaFinalizado);
 }
-
-char *leer_lista(t_list *cola)
-{
-    char *out = string_new();
-
-    for (int i = 0; i < list_size(cola); i++)
-    {
-        Pcb *proceso_actual = list_get(cola, i);
-
-        string_append(&out, "[");
-        char *pid = string_itoa(proceso_actual->pid);
-        string_append(&out, pid);
-        string_append(&out, "]");
-        free(pid);
-    }
-    return out;
-}
-char *leer_cola(t_queue *cola)
-{
-    char *out = string_new();
-
-    for (int i = 0; i < queue_size(cola); i++)
-    {
-        Pcb *proceso_actual = queue_peek_at(cola, i);
-
-        string_append(&out, "[");
-        char *pid = string_itoa(proceso_actual->pid);
-        string_append(&out, pid);
-        string_append(&out, "]");
-        free(pid);
-    }
-    return out;
-}
-
-float obtener_tiempo_de_trabajo_actual(Pcb *proceso)
-{
-    float alfa = KERNEL_CONFIG.ALFA;
-    float estimacionAnterior = proceso->estimacionRafaga;
-    int rafagaAnterior = proceso->tiempoRafagaRealAnterior * 1000;
-
-    float resultado = alfa * rafagaAnterior + (1 - alfa) * estimacionAnterior;
-
-    return resultado;
-}
-
-bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
-{
-    return obtener_tiempo_de_trabajo_actual((Pcb *)procesoA) < obtener_tiempo_de_trabajo_actual((Pcb *)procesoB);
-}
-
-// Funciones para liberar memoria
-
-void liberar_estructuras()
-{
-
-    list_destroy(colaListos);
-
-    queue_destroy(colaNuevos);
-
-    queue_destroy(colaBloqueados);
-
-    queue_destroy(colaEjecutando);
-
-    queue_destroy(colaSuspendidoListo);
-
-    queue_destroy(colaFinalizado);
-
-    list_destroy(socketsConsola);
-}
-
 void imprimir_pcb(Pcb *proceso)
 {
     log_info(logger, "PCB Nº %d", proceso->pid);
@@ -834,6 +709,53 @@ void imprimir_pcb(Pcb *proceso)
         lineaInstruccion = list_get(proceso->instrucciones, i);
         log_info(logger, "Instrucción Nº %d: %s\t- Parámetro 1: %d\t- Parámetro 2: %d", i, lineaInstruccion->identificador, lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
     }
+}
+
+char *leer_cola(t_queue *cola)
+{
+    char *out = string_new();
+
+    for (int i = 0; i < queue_size(cola); i++)
+    {
+        Pcb *proceso_actual = queue_peek_at(cola, i);
+
+        string_append(&out, "[");
+        char *pid = string_itoa(proceso_actual->pid);
+        string_append(&out, pid);
+        string_append(&out, "]");
+        free(pid);
+    }
+    return out;
+}
+char *leer_lista(t_list *cola)
+{
+    char *out = string_new();
+
+    for (int i = 0; i < list_size(cola); i++)
+    {
+        Pcb *proceso_actual = list_get(cola, i);
+
+        string_append(&out, "[");
+        char *pid = string_itoa(proceso_actual->pid);
+        string_append(&out, pid);
+        string_append(&out, "]");
+        free(pid);
+    }
+    return out;
+}
+
+// Funciones para liberar memoria
+
+void liberar_estructuras()
+{
+
+    list_destroy(colaListos);
+    queue_destroy(colaNuevos);
+    queue_destroy(colaBloqueados);
+    queue_destroy(colaEjecutando);
+    queue_destroy(colaSuspendidoListo);
+    queue_destroy(colaFinalizado);
+    list_destroy(socketsConsola);
 }
 
 void liberar_semaforos()

@@ -1,0 +1,7 @@
+bin/
+obj/
+.vscode/
+commons/
+*.log
+*.txt
+.github/
