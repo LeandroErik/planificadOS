@@ -2,28 +2,6 @@
 
 KernelConfig KERNEL_CONFIG;
 
-Logger *iniciar_logger_kernel()
-{
-  return log_create("Kernel.log", "Kernel", 1, LOG_LEVEL_INFO);
-}
-
-int iniciar_servidor_kernel()
-{
-  log_info(logger, "Iniciando Servidor Kernel...");
-
-  int socketKernel = iniciar_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_KERNEL);
-
-  if (socketKernel < 0)
-  {
-    log_error(logger, "Error intentando iniciar Servidor Kernel.");
-    return EXIT_FAILURE;
-  }
-
-  log_info(logger, "Servidor Kernel iniciado correctamente.");
-
-  return socketKernel;
-}
-
 int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
 {
   Lista *listaPlana = obtener_paquete_como_lista(socketCliente);
@@ -60,14 +38,33 @@ Pcb *generar_pcb(int socketCliente)
 {
   Lista *listaInstrucciones = list_create();
   int tamanioProceso = rellenar_lista_instrucciones(listaInstrucciones, socketCliente);
+
   return crear_pcb(listaInstrucciones, tamanioProceso);
 }
 
+Logger *iniciar_logger_kernel()
+{
+  return log_create("Kernel.log", "Kernel", 1, LOG_LEVEL_INFO);
+}
+
+int iniciar_servidor_kernel()
+{
+  log_info(logger, "Iniciando Servidor Kernel...");
+  int socketKernel = iniciar_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_KERNEL);
+
+  if (socketKernel < 0)
+  {
+    log_error(logger, "Error intentando iniciar Servidor Kernel.");
+    return EXIT_FAILURE;
+  }
+
+  log_info(logger, "Servidor Kernel iniciado correctamente.");
+  return socketKernel;
+}
 int conectar_con_cpu_dispatch()
 {
 
   log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
-
   int socketCPUDispatch = crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
 
   if (socketCPUDispatch < 0)
@@ -77,14 +74,12 @@ int conectar_con_cpu_dispatch()
   }
 
   log_info(logger, "Conexión con Dispatch establecida.");
-
   return socketCPUDispatch;
 }
 
 int conectar_con_cpu_interrupt()
 {
   log_info(logger, "Conectando con Servidor CPU via Interrupt en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
-
   int socketCPUDInterrupt = crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
 
   if (socketCPUDInterrupt < 0)
@@ -94,6 +89,5 @@ int conectar_con_cpu_interrupt()
   }
 
   log_info(logger, "Conexión con Interrupt establecida.");
-
   return socketCPUDInterrupt;
 }

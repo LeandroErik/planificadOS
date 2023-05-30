@@ -4,14 +4,12 @@ void esperar_consola(int socketKernel)
 {
   while (true)
   {
-
     log_info(logger, "Esperando conexiones de Consola...");
     int socketConsola = esperar_cliente(socketKernel);
 
     if (socketConsola < 0)
     {
       log_warning(logger, "Consola desconectada.");
-
       return;
     }
 
@@ -37,19 +35,19 @@ void manejar_paquete_consola(int socketConsola)
       log_info(logger, "Lineas de Código recibidas de Consola.");
       agregar_proceso_nuevo(generar_pcb(socketConsola));
       return;
-
       break;
+
     case MENSAJE:
       log_info(logger, "Mensaje recibido de Consola.");
       mensaje = obtener_mensaje_del_cliente(socketConsola);
       log_info(logger, "Mensaje: %s", mensaje);
       free(mensaje);
-
       break;
+
     case DESCONEXION:
       log_warning(logger, "Conexión de Consola terminada.");
-
       return;
+
     default:
       log_warning(logger, "Operacion desconocida.");
 
@@ -64,7 +62,7 @@ void enviar_interrupcion(int socketInterrupt)
 
   enviar_paquete_a_servidor(paquete, socketInterrupt);
 
-  log_info(logger, "[INTERRUPCION] Se envio Interrupción a CPU...");
+  log_info(logger, "[INTERRUPCION] Se envio Interrupción a CPU.");
 
   eliminar_paquete(paquete);
 }
